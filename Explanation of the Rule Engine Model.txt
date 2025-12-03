@@ -1,0 +1,121 @@
+1. Purpose of the Rule Engine
+
+The rule engine provides a deterministic, declarative, and evolvable mechanism for applying validations, transformations, and business logic to any structured data object.
+It ensures:
+Predictable execution
+Safety from malformed rules
+Clear separation between data, schema, and logic
+Support for runtime-registered rules
+Full auditability
+This mirrors the engineering philosophy often followed in large enterprise environments (similar to how Mercedes handles validation logic across KEM workflows: deterministic, versioned, strictly validated).
+
+2. Rule Definition Model
+
+Rules are stored as structured metadata:
+
+{
+  "id": "rule.temperature.limit.v1",
+  "scope": "field | entity | dataset",
+  "field": "temperature",
+  "type": "validation | transformation | default | enrichment",
+  "condition": "temperature > 100",
+  "action": "raise_error('Overheating detected')",
+  "version": 1
+}
+
+Key Characteristics:
+Declarative: Rules expressed in a JSON/YAML DSL
+Validatable: Rule structure validated before activation
+Versioned: Newer rules don’t overwrite previous ones
+Isolated: Each rule operates inside a sandbox
+
+3. Execution Flow
+
+The Rule Engine executes in this deterministic order:
+Step 1: Schema Validation Hooks
+Type checks
+Required fields
+Compatibility with schema version
+
+Step 2: Field-Level Rules
+Applied sequentially on the field they belong to.
+
+Step 3: Entity-Level Rules
+Examples:
+Inter-field dependencies
+Conditional cascading
+Derived field computations
+
+Step 4: Dataset-Level Rules
+Cross-entity consistency
+Aggregated validations
+
+Step 5: Cascading / Chained Rules
+If Rule A produces a value required by Rule B, the engine ensures:
+No infinite loops
+
+Maximum chain depth
+Cycle detection
+This approach parallels how change validations in KEM workflows cascade across dependent components — ensuring discipline and preventing unintended propagation.
+
+4. Rule Registration & Storage
+
+Rules are stored in a versioned metadata registry:
+
+rules/
+ ├─ validations/
+ ├─ transformations/
+ ├─ defaults/
+ └─ enrichments/
+
+
+Each rule is stored with:
+version
+activation timestamp
+author
+changelog
+deprecation flag
+This achieves traceability similar to part evolution in automotive development (e.g., ZGS changes in Mercedes systems).
+
+5. Safety Mechanisms
+
+The engine includes protective layers:
+Sandboxed Evaluation
+Restricted Python execution context
+No OS access
+No external filesystem access
+Deterministic Execution
+No non-deterministic operations (randomness, external mutability)
+Infinite Recursion Prevention
+Depth counters
+DAG-based dependency ordering
+Rule Verification Before Activation
+Each rule must pass:
+Structural validation
+Dry-run simulation
+Schema compatibility check
+
+6. Extensibility Model
+
+Engine allows new rule types without modifying the core.
+Example extension points:
+Custom validation functions
+Custom enrichment modules
+Plug-in rule evaluators
+This aligns with the "extension without modifying the core" principle found in enterprise-grade automotive platforms.
+
+7. Auditability & Trace Logging
+
+Every rule execution generates a log entry:
+timestamp,
+rule_id,
+input,
+output,
+decision,
+status
+
+Stored as immutable events for:
+Debugging
+Compliance
+Replay
+Auditability is crucial (very similar to how KEM changes are logged for traceability in Mercedes).
